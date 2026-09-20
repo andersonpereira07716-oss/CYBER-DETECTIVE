@@ -19,9 +19,10 @@
             height: 100vh;
             overflow: hidden;
             padding: 12px;
+            transition: color 0.3s;
         }
         header {
-            border-bottom: 2px solid #00ffcc;
+            border-bottom: 2px solid currentColor;
             padding-bottom: 8px;
             margin-bottom: 10px;
             display: flex;
@@ -33,10 +34,15 @@
             letter-spacing: 2px;
             text-shadow: 0 0 8px rgba(0,255,204,0.6);
         }
+        .header-controls {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
         .status-badge {
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             background: rgba(0,255,204,0.1);
-            border: 1px solid #00ffcc;
+            border: 1px solid currentColor;
             padding: 3px 6px;
             border-radius: 4px;
             cursor: pointer;
@@ -45,6 +51,15 @@
             background: rgba(168,85,247,0.2);
             border-color: #a855f7;
             color: #d8b4fe;
+        }
+        .theme-btn {
+            background: transparent;
+            border: 1px solid currentColor;
+            color: inherit;
+            padding: 3px 6px;
+            font-size: 0.65rem;
+            border-radius: 4px;
+            cursor: pointer;
         }
         .stats-bar {
             display: flex;
@@ -58,7 +73,7 @@
             border: 1px solid #1e293b;
         }
         .stats-bar span {
-            color: #00ffcc;
+            color: inherit;
         }
         #terminal-box {
             flex: 1;
@@ -67,7 +82,7 @@
             border-radius: 6px;
             padding: 10px;
             overflow-y: auto;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -79,7 +94,7 @@
         .system-msg { color: #3b82f6; }
         .warning-msg { color: #f59e0b; }
         .success-msg { color: #10b981; }
-        .prompt-msg { color: #00ffcc; }
+        .prompt-msg { color: inherit; }
         .clue-msg { color: #a855f7; font-weight: bold; }
         
         .actions-panel {
@@ -88,10 +103,10 @@
             grid-template-columns: 1fr 1fr;
             gap: 8px;
         }
-        button {
+        button.action-btn {
             background: #111827;
-            color: #00ffcc;
-            border: 1px solid #00ffcc;
+            color: inherit;
+            border: 1px solid currentColor;
             padding: 10px;
             border-radius: 6px;
             font-weight: bold;
@@ -100,19 +115,19 @@
             font-size: 0.75rem;
             transition: all 0.2s;
         }
-        button:active, button:hover {
-            background: #00ffcc;
+        button.action-btn:active, button.action-btn:hover {
+            background: currentColor;
             color: #0b0f19;
-            box-shadow: 0 0 10px #00ffcc;
+            box-shadow: 0 0 10px currentColor;
         }
         button:disabled {
-            border-color: #334155;
-            color: #475569;
-            background: #090d16;
-            box-shadow: none;
+            border-color: #334155 !important;
+            color: #475569 !important;
+            background: #090d16 !important;
+            box-shadow: none !important;
             cursor: not-allowed;
         }
-        /* Modal Freemium Otimizado */
+        /* Modal Freemium Avançado */
         #paywall-modal {
             display: none;
             position: fixed;
@@ -121,7 +136,7 @@
             z-index: 100;
             justify-content: center;
             align-items: center;
-            padding: 20px;
+            padding: 15px;
         }
         .modal-content {
             background: #0f172a;
@@ -129,7 +144,7 @@
             border-radius: 8px;
             padding: 18px;
             width: 100%;
-            max-width: 320px;
+            max-width: 330px;
             text-align: center;
             box-shadow: 0 0 20px rgba(168,85,247,0.4);
         }
@@ -154,7 +169,7 @@
             margin-bottom: 8px;
             text-align: center;
             font-family: monospace;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
         }
         .btn-mp {
             background: #009ee3;
@@ -196,7 +211,10 @@
 
     <header>
         <h1>CYBER-DETECTIVE</h1>
-        <div class="status-badge" id="net-status" onclick="openPaywall()">FREE_TIER</div>
+        <div class="header-controls">
+            <button class="theme-btn" onclick="toggleTheme()">COR</button>
+            <div class="status-badge" id="net-status" onclick="openPaywall()">FREE_TIER</div>
+        </div>
     </header>
 
     <div class="stats-bar">
@@ -206,25 +224,26 @@
     </div>
 
     <div id="terminal-box">
-        <div class="log-entry system-msg">[SYSTEM] Terminal de Investigação v2.8 carregado.</div>
-        <div class="log-entry system-msg">[SYSTEM] Modo Free ativo. Faça upgrade para PRO.</div>
-        <div class="log-entry prompt-msg">> Missão Ativa: Analise os registos de acesso do servidor.</div>
+        <div class="log-entry system-msg">[SYSTEM] Terminal de Investigação v3.0 carregado.</div>
+        <div class="log-entry system-msg">[SYSTEM] Novo recurso: Personalização de tema e banco de dados de links ativo.</div>
+        <div class="log-entry prompt-msg">> Missão Ativa: Analise os registos de acesso do servidor principal.</div>
     </div>
 
     <div class="actions-panel" id="control-panel">
-        <button id="btn-logs" onclick="investigateLogs()">Analisar Logs</button>
-        <button id="btn-decrypt" onclick="decryptFiles()" disabled>Descodificar Pista</button>
-        <button id="btn-hack" onclick="hackNode()">Invadir Firewall</button>
-        <button id="btn-next" onclick="nextCase()" disabled>Próximo Caso</button>
+        <button class="action-btn" id="btn-logs" onclick="investigateLogs()">Analisar Logs</button>
+        <button class="action-btn" id="btn-decrypt" onclick="decryptFiles()" disabled>Descodificar Pista</button>
+        <button class="action-btn" id="btn-hack" onclick="hackNode()">Invadir Firewall</button>
+        <button class="action-btn" id="btn-next" onclick="nextCase()" disabled>Próximo Caso</button>
     </div>
 
-    <!-- Modal Paywall Otimizado para WebView -->
+    <!-- Modal Paywall com Configuração de Link do Mercado Pago -->
     <div id="paywall-modal">
         <div class="modal-content">
             <h2>CYBER-DETECTIVE PRO</h2>
-            <p>1. Copie o link abaixo ou clique para pagar no Mercado Pago:</p>
-            <button class="btn-mp" onclick="openMercadoPago()">Abrir Checkout Mercado Pago</button>
-            <p>2. Insira o código de ativação após o pagamento:</p>
+            <p>Insira o seu Link do Mercado Pago oficial:</p>
+            <input type="text" id="mp-link-input" placeholder="https://mpago.la/seu-codigo-real">
+            <button class="btn-mp" onclick="openMercadoPagoReal()">Pagar no Mercado Pago</button>
+            <p>Possui chave de ativação?</p>
             <input type="text" id="license-code" placeholder="EX: CYBER2026">
             <button class="btn-activate" onclick="activateLicense()">Ativar Licença PRO</button>
             <button class="btn-close" onclick="closePaywall()">Fechar</button>
@@ -236,14 +255,18 @@
             clues: 0,
             level: 1,
             isPro: localStorage.getItem('cyber_pro') === 'true',
+            mpUrl: localStorage.getItem('cyber_mp_url') || 'https://www.mercadopago.com.br',
+            themeIndex: 0,
             logsChecked: false,
             decrypted: false,
             hacked: false
         };
 
-        if (state.isPro) {
-            applyProUI();
-        }
+        const themes = ['#00ffcc', '#3b82f6', '#10b981', '#f59e0b', '#a855f7'];
+        
+        // Aplicar estado inicial guardado
+        if (state.isPro) applyProUI();
+        document.getElementById('mp-link-input').value = state.mpUrl;
 
         const terminal = document.getElementById('terminal-box');
 
@@ -253,6 +276,11 @@
             div.textContent = text;
             terminal.appendChild(div);
             terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function toggleTheme() {
+            state.themeIndex = (state.themeIndex + 1) % themes.length;
+            document.body.style.color = themes[state.themeIndex];
         }
 
         function openPaywall() {
@@ -265,17 +293,21 @@
             document.getElementById('paywall-modal').style.display = 'none';
         }
 
-        function openMercadoPago() {
-            const url = 'https://mpago.la/O_SEU_LINK_REAL';
-            // Tenta usar a API do Capacitor se disponível, caso contrário usa location
+        function openMercadoPagoReal() {
+            const inputUrl = document.getElementById('mp-link-input').value.trim();
+            if (inputUrl && inputUrl.startsWith('http')) {
+                state.mpUrl = inputUrl;
+                localStorage.setItem('cyber_mp_url', inputUrl);
+            }
+            
             try {
                 if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
-                    window.Capacitor.Plugins.Browser.open({ url: url });
+                    window.Capacitor.Plugins.Browser.open({ url: state.mpUrl });
                 } else {
-                    window.open(url, '_system');
+                    window.open(state.mpUrl, '_system');
                 }
             } catch (e) {
-                window.location.href = url;
+                window.location.href = state.mpUrl;
             }
         }
 
@@ -286,9 +318,9 @@
                 localStorage.setItem('cyber_pro', 'true');
                 applyProUI();
                 closePaywall();
-                addLog("[SUCESSO] Licença PRO ativada permanentemente!", "success-msg");
+                addLog("[SUCESSO] Licença PRO ativada permanentemente neste dispositivo!", "success-msg");
             } else {
-                alert("Código inválido. Conclua o pagamento para receber a licença.");
+                alert("Código inválido. Insira uma chave de licença válida.");
             }
         }
 
