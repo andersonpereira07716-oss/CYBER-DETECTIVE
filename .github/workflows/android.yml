@@ -25,8 +25,15 @@ jobs:
     - name: Install dependencies and Capacitor
       run: |
         npm install
-        npx cap init "Cyber-Detective" "com.cyberdetective.game" --web-dir www --yes || true
-        npx cap add android || true
+        npm install @capacitor/assets --save-dev
+
+    - name: Generate Icons and Splash
+      run: |
+        npx cap-assets generate --ios --android --icon resources/android/icon.png --splash resources/android/splash.png
+
+    - name: Copy to Android Platform
+      run: |
+        npx cap copy android || true
         npx cap update android
 
     - name: Build APK with Gradle

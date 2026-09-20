@@ -2,5 +2,8 @@
   "appId": "com.cyberdetective.game",
   "appName": "Cyber-Detective",
   "webDir": "www",
-  "bundledWebRuntime": false
+  "bundledWebRuntime": false,
+  "android": {
+      "iconSource": "resources/android"
+  }
 }
