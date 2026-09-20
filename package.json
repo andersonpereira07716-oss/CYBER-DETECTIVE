@@ -1,4 +1,5 @@
-  {"name": "meu-jogo",
+{
+  "name": "meu-jogo",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -12,16 +13,14 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "dependencies": {
-    "mercadopago": "^2.0.15",
-    "@vercel/kv": "^1.0.1"
-  },
   "type": "commonjs",
   "bugs": {
     "url": "https://github.com/andersonpereira07716-oss/cyber-detective/issues"
   },
   "homepage": "https://github.com/andersonpereira07716-oss/cyber-detective#readme",
   "dependencies": {
+    "mercadopago": "^2.0.15",
+    "@vercel/kv": "^1.0.1",
     "@capacitor/android": "^8.5.2",
     "@capacitor/browser": "^8.0.4",
     "@capacitor/cli": "^8.5.2",
