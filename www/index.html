@@ -50,6 +50,7 @@
         .nav-btn { background: transparent; color: #00ffcc; border: 1px solid #00ffcc; padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: bold; cursor: pointer; }
         .nav-btn.pro-btn { background: #f59e0b; color: #05070c; border-color: #f59e0b; }
         .nav-btn.pro-btn.unlocked { background: #10b981; border-color: #10b981; color: #05070c; }
+        .nav-btn:disabled { opacity: 0.5; cursor: default; }
 
         .stats-bar { display: flex; justify-content: space-between; font-size: 0.7rem; margin-bottom: 8px; color: #94a3b8; background: #0b0f19; padding: 6px 10px; border-radius: 6px; border: 1px solid #1a365d; }
 
@@ -73,10 +74,6 @@
         #pro-banner {
             display: none; margin-top: 8px; background: #1c1408; border: 1px solid #f59e0b; border-radius: 6px;
             padding: 10px; font-size: 0.65rem; color: #fbbf24; text-align: center;
-        }
-        #pro-banner button {
-            margin-top: 6px; background: #f59e0b; color: #05070c; border: none; padding: 8px 10px;
-            border-radius: 4px; font-weight: bold; font-size: 0.65rem; cursor: pointer; width: 100%;
         }
     </style>
 </head>
@@ -137,18 +134,24 @@
 
         <div id="pro-banner">
             > Recursos PRO bloqueados: Descodificar Pista e Próximo Caso.<br>
-            > Compra feita? Toque para liberar seu acesso.
-            <button onclick="confirmPurchase()">JÁ COMPREI — LIBERAR PRO</button>
+            > Toque em PRO no topo para desbloquear.
         </div>
     </div>
 
     <script>
-        // Link de pagamento do Mercado Pago (tier PRO)
-        const MERCADOPAGO_CHECKOUT_URL = "https://mpago.la/2uPBgN7";
-        const PRO_STORAGE_KEY = "cd_pro_unlocked";
+        // ⚠️ Ajuste para o domínio real do seu app publicado na Vercel
+        const API_BASE_URL = 'https://cyber-detective-rouge.vercel.app';
+        const DEVICE_ID_KEY = 'cd_device_id';
 
-        function isPro() {
-            return localStorage.getItem(PRO_STORAGE_KEY) === "true";
+        let proStatus = false; // vem sempre do servidor, nunca decidido só no cliente
+
+        function getDeviceId() {
+            let id = localStorage.getItem(DEVICE_ID_KEY);
+            if (!id) {
+                id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
+                localStorage.setItem(DEVICE_ID_KEY, id);
+            }
+            return id;
         }
 
         function refreshProUI() {
@@ -157,7 +160,7 @@
             const btnDecode = document.getElementById('btn-decode');
             const btnNext = document.getElementById('btn-next');
 
-            if (isPro()) {
+            if (proStatus) {
                 proBtn.textContent = 'PRO ✓';
                 proBtn.classList.add('unlocked');
                 banner.style.display = 'none';
@@ -170,6 +173,20 @@
                 btnDecode.classList.add('locked');
                 btnNext.classList.add('locked');
             }
+        }
+
+        // Confirma com o SERVIDOR (que por sua vez confirmou com o Mercado Pago) se é PRO
+        async function checkProStatus() {
+            try {
+                const deviceId = getDeviceId();
+                const res = await fetch(`${API_BASE_URL}/api/check-status?deviceId=${encodeURIComponent(deviceId)}`);
+                const data = await res.json();
+                proStatus = !!data.isPro;
+            } catch (err) {
+                console.error('Falha ao verificar status PRO:', err);
+                // mantém proStatus como estava (não libera nada por erro de rede)
+            }
+            refreshProUI();
         }
 
         // Lógica de Carregamento da Splash Screen
@@ -198,8 +215,16 @@
                 splash.style.display = 'none';
                 document.getElementById('game-content').style.display = 'flex';
                 refreshProUI();
+                checkProStatus();
             }, 600);
         }
+
+        // Se o usuário voltar do checkout do Mercado Pago para esta aba, reconsulta o status
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                checkProStatus();
+            }
+        });
 
         // Funções interativas do Terminal
         function investigate() {
@@ -218,7 +243,7 @@
 
         function decodeClue() {
             const term = document.getElementById('terminal-box');
-            if (!isPro()) {
+            if (!proStatus) {
                 term.innerHTML += '<div class="log-entry locked-msg">> [BLOQUEADO] "Descodificar Pista" é um recurso PRO. Toque em PRO para desbloquear.</div>';
                 term.scrollTop = term.scrollHeight;
                 return;
@@ -229,7 +254,7 @@
 
         function nextCase() {
             const term = document.getElementById('terminal-box');
-            if (!isPro()) {
+            if (!proStatus) {
                 term.innerHTML += '<div class="log-entry locked-msg">> [BLOQUEADO] "Próximo Caso" é um recurso PRO. Toque em PRO para desbloquear.</div>';
                 term.scrollTop = term.scrollHeight;
                 return;
@@ -246,32 +271,37 @@
             alert('Modo de alta visibilidade ativado.');
         }
 
-        // Abre o checkout do Mercado Pago numa nova aba/janela do navegador
-        function openProCheckout() {
-            if (isPro()) {
+        // Cria um checkout dinâmico vinculado a este aparelho e redireciona
+        async function openProCheckout() {
+            if (proStatus) {
                 alert('Você já tem acesso PRO liberado neste dispositivo!');
                 return;
             }
-            const term = document.getElementById('terminal-box');
-            term.innerHTML += '<div class="log-entry" style="color: #f59e0b;">> [PRO] Redirecionando para o checkout seguro...</div>';
-            term.scrollTop = term.scrollHeight;
 
-            const win = window.open(MERCADOPAGO_CHECKOUT_URL, '_blank');
+            const proBtn = document.getElementById('pro-nav-btn');
+            proBtn.disabled = true;
+            proBtn.textContent = '...';
 
-            // Fallback: se o navegador/app bloquear o popup, redireciona na mesma aba
-            if (!win || win.closed || typeof win.closed === 'undefined') {
-                window.location.href = MERCADOPAGO_CHECKOUT_URL;
+            try {
+                const deviceId = getDeviceId();
+                const res = await fetch(`${API_BASE_URL}/api/create-preference`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ deviceId })
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.checkoutUrl) {
+                    throw new Error(data.error || 'Erro ao gerar checkout');
+                }
+
+                window.location.href = data.checkoutUrl;
+            } catch (err) {
+                console.error(err);
+                alert('Não foi possível abrir o checkout agora. Tente novamente em instantes.');
+                proBtn.disabled = false;
+                proBtn.textContent = 'PRO';
             }
-        }
-
-        // Confirmação manual de compra (sem backend, não há verificação automática de pagamento)
-        function confirmPurchase() {
-            localStorage.setItem(PRO_STORAGE_KEY, "true");
-            refreshProUI();
-            const term = document.getElementById('terminal-box');
-            term.innerHTML += '<div class="log-entry success-msg">> [PRO] Acesso PRO liberado neste dispositivo. Bem-vindo, investigador.</div>';
-            term.scrollTop = term.scrollHeight;
-            alert('Acesso PRO liberado!');
         }
     </script>
 </body>
