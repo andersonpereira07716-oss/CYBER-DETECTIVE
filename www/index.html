@@ -112,7 +112,7 @@
             box-shadow: none;
             cursor: not-allowed;
         }
-        /* Modal Freemium Real */
+        /* Modal Freemium */
         #paywall-modal {
             display: none;
             position: fixed;
@@ -192,8 +192,8 @@
     </div>
 
     <div id="terminal-box">
-        <div class="log-entry system-msg">[SYSTEM] Terminal de Investigação Cibernética v2.6 carregado.</div>
-        <div class="log-entry system-msg">[SYSTEM] Modo Free ativo. Atualize para PRO via Mercado Pago para desbloquear tudo.</div>
+        <div class="log-entry system-msg">[SYSTEM] Terminal de Investigação v2.7 carregado.</div>
+        <div class="log-entry system-msg">[SYSTEM] Modo Free ativo. Atualize para PRO via Mercado Pago.</div>
         <div class="log-entry prompt-msg">> Missão Ativa: Analise os registos de acesso do servidor.</div>
     </div>
 
@@ -208,10 +208,10 @@
     <div id="paywall-modal">
         <div class="modal-content">
             <h2>CYBER-DETECTIVE PRO</h2>
-            <p>1. Pague com Mercado Pago para receber a sua licença de acesso ilimitado.</p>
+            <p>1. Toque abaixo para abrir o checkout seguro do Mercado Pago:</p>
             <button class="btn-mp" onclick="openMercadoPago()">Pagar com Mercado Pago</button>
-            <p style="margin-top: 10px;">2. Insira o código de ativação recebido após o pagamento:</p>
-            <input type="text" id="license-code" placeholder="EX: PRO-992X-2026">
+            <p style="margin-top: 10px;">2. Insira o código de ativação após o pagamento:</p>
+            <input type="text" id="license-code" placeholder="EX: CYBER2026">
             <button class="btn-activate" onclick="activateLicense()">Ativar Licença PRO</button>
             <button class="btn-close" onclick="closePaywall()">Fechar</button>
         </div>
@@ -227,7 +227,6 @@
             hacked: false
         };
 
-        // Restaurar estado PRO se já estiver salvo no telemóvel
         if (state.isPro) {
             applyProUI();
         }
@@ -253,21 +252,32 @@
         }
 
         function openMercadoPago() {
-            // Substitua pelo seu link real de pagamento do Mercado Pago
-            window.open('https://mpago.la/seu-link-de-pagamento', '_blank');
+            // Utiliza location.href para redirecionar corretamente no WebView do Android
+            const paymentUrl = 'https://mpago.la/seu-link-de-pagamento';
+            
+            try {
+                // Tenta abrir numa nova janela/tag do browser nativo se suportado
+                const a = document.createElement('a');
+                a.href = paymentUrl;
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } catch(e) {
+                window.location.href = paymentUrl;
+            }
         }
 
         function activateLicense() {
             const code = document.getElementById('license-code').value.trim();
-            // Código de ativação exemplo (pode definir o seu próprio código secreto)
             if (code === 'CYBER2026' || code.startsWith('PRO-')) {
                 state.isPro = true;
                 localStorage.setItem('cyber_pro', 'true');
                 applyProUI();
                 closePaywall();
-                addLog("[SUCESSO] Licença PRO ativada permanentemente neste dispositivo!", "success-msg");
+                addLog("[SUCESSO] Licença PRO ativada permanentemente!", "success-msg");
             } else {
-                alert("Código inválido. Conclua o pagamento no Mercado Pago para obter o código.");
+                alert("Código inválido. Conclua o pagamento para receber a licença.");
             }
         }
 
