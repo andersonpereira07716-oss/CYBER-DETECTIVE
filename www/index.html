@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CYBER-DETECTIVE</title>
+    <title>SHADOWS OF EVIDENCE - CYBER-DETECTIVE</title>
     <style>
         * {
             box-sizing: border-box;
@@ -12,14 +12,115 @@
             font-family: 'Courier New', Courier, monospace;
         }
         body {
-            background-color: #0b0f19;
+            background-color: #000;
             color: #00ffcc;
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            position: relative;
+        }
+        /* Ecrã de Apresentação / Splash Screen */
+        #splash-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, #111827 0%, #030712 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            z-index: 50;
+            transition: opacity 0.5s ease;
+        }
+        .splash-header {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .splash-header h1 {
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            color: #f3f4f6;
+            text-shadow: 0 0 10px rgba(255,255,255,0.4);
+        }
+        .splash-header p {
+            font-size: 0.65rem;
+            color: #dc2626;
+            letter-spacing: 4px;
+            margin-top: 4px;
+            text-transform: uppercase;
+        }
+        .splash-center {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.75rem;
+            border: 1px dashed #1f2937;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.4);
+            width: 100%;
+            max-width: 280px;
+        }
+        .splash-footer {
+            width: 100%;
+            max-width: 300px;
+            margin-bottom: 15px;
+        }
+        .progress-box {
+            background: #0f172a;
+            border: 1px solid #334155;
+            padding: 10px;
+            border-radius: 6px;
+        }
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.65rem;
+            color: #10b981;
+            margin-bottom: 6px;
+        }
+        .progress-bar-bg {
+            background: #020617;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid #1e293b;
+        }
+        .progress-bar-fill {
+            background: #10b981;
+            height: 100%;
+            width: 0%;
+            transition: width 0.2s;
+            box-shadow: 0 0 8px #10b981;
+        }
+        .btn-start {
+            display: none;
+            width: 100%;
+            background: #111827;
+            color: #f3f4f6;
+            border: 1px solid #dc2626;
             padding: 12px;
-            transition: color 0.3s;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 15px rgba(220,38,38,0.4);
+            animation: pulseBtn 1.5s infinite;
+        }
+        @keyframes pulseBtn {
+            0% { transform: scale(1); box-shadow: 0 0 10px rgba(220,38,38,0.4); }
+            50% { transform: scale(1.02); box-shadow: 0 0 20px rgba(220,38,38,0.7); }
+            100% { transform: scale(1); box-shadow: 0 0 10px rgba(220,38,38,0.4); }
+        }
+
+        /* Jogo Principal (inicialmente oculto até sair do Splash) */
+        #game-content {
+            display: none;
+            flex-direction: column;
+            height: 100vh;
+            padding: 12px;
         }
         header {
             border-bottom: 2px solid currentColor;
@@ -29,38 +130,7 @@
             justify-content: space-between;
             align-items: center;
         }
-        h1 {
-            font-size: 1rem;
-            letter-spacing: 2px;
-            text-shadow: 0 0 8px rgba(0,255,204,0.6);
-        }
-        .header-controls {
-            display: flex;
-            gap: 5px;
-            align-items: center;
-        }
-        .status-badge {
-            font-size: 0.6rem;
-            background: rgba(0,255,204,0.1);
-            border: 1px solid currentColor;
-            padding: 3px 5px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        .status-badge.pro {
-            background: rgba(168,85,247,0.2);
-            border-color: #a855f7;
-            color: #d8b4fe;
-        }
-        .theme-btn, .profile-btn {
-            background: transparent;
-            border: 1px solid currentColor;
-            color: inherit;
-            padding: 3px 5px;
-            font-size: 0.6rem;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+        h1 { font-size: 1rem; letter-spacing: 2px; }
         .stats-bar {
             display: flex;
             justify-content: space-between;
@@ -71,9 +141,6 @@
             padding: 6px 8px;
             border-radius: 4px;
             border: 1px solid #1e293b;
-        }
-        .stats-bar span {
-            color: inherit;
         }
         #terminal-box {
             flex: 1;
@@ -86,29 +153,11 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
-            position: relative;
         }
-        /* Efeito Glitch Visual */
-        .glitch-anim {
-            animation: glitchEffect 0.2s ease;
-        }
-        @keyframes glitchEffect {
-            0% { transform: translate(0); filter: hue-rotate(0deg); }
-            20% { transform: translate(-2px, 2px); filter: hue-rotate(90deg); }
-            40% { transform: translate(-2px, -2px); filter: hue-rotate(180deg); }
-            60% { transform: translate(2px, 2px); filter: hue-rotate(270deg); }
-            100% { transform: translate(0); filter: hue-rotate(360deg); }
-        }
-        .log-entry {
-            line-height: 1.4;
-        }
+        .log-entry { line-height: 1.4; }
         .system-msg { color: #3b82f6; }
-        .warning-msg { color: #f59e0b; }
         .success-msg { color: #10b981; }
         .prompt-msg { color: inherit; }
-        .clue-msg { color: #a855f7; font-weight: bold; }
-        
         .actions-panel {
             margin-top: 10px;
             display: grid;
@@ -125,355 +174,105 @@
             cursor: pointer;
             text-transform: uppercase;
             font-size: 0.7rem;
-            transition: all 0.2s;
-        }
-        button.action-btn:active, button.action-btn:hover {
-            background: currentColor;
-            color: #0b0f19;
-            box-shadow: 0 0 10px currentColor;
-        }
-        button:disabled {
-            border-color: #334155 !important;
-            color: #475569 !important;
-            background: #090d16 !important;
-            box-shadow: none !important;
-            cursor: not-allowed;
-        }
-
-        /* Modais (Paywall & Perfil) */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5,7,12,0.95);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
-        }
-        .modal-content {
-            background: #0f172a;
-            border: 2px solid #a855f7;
-            border-radius: 8px;
-            padding: 18px;
-            width: 100%;
-            max-width: 320px;
-            text-align: center;
-            box-shadow: 0 0 20px rgba(168,85,247,0.4);
-        }
-        .modal-content h2 {
-            color: #d8b4fe;
-            margin-bottom: 8px;
-            font-size: 1rem;
-        }
-        .modal-content p {
-            font-size: 0.7rem;
-            color: #94a3b8;
-            margin-bottom: 10px;
-            line-height: 1.4;
-        }
-        .profile-stats {
-            text-align: left;
-            font-size: 0.75rem;
-            color: #cbd5e1;
-            margin-bottom: 12px;
-            background: #05070c;
-            padding: 10px;
-            border-radius: 4px;
-            border: 1px solid #1e293b;
-        }
-        input {
-            width: 100%;
-            padding: 8px;
-            background: #05070c;
-            border: 1px solid #334155;
-            color: #00ffcc;
-            border-radius: 4px;
-            margin-bottom: 8px;
-            text-align: center;
-            font-family: monospace;
-            font-size: 0.75rem;
-        }
-        .btn-mp {
-            background: #009ee3;
-            color: #fff;
-            border: none;
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            font-weight: bold;
-            font-size: 0.75rem;
-            cursor: pointer;
-        }
-        .btn-activate {
-            background: #7e22ce;
-            color: #fff;
-            border: 1px solid #a855f7;
-            width: 100%;
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            font-weight: bold;
-            font-size: 0.75rem;
-            cursor: pointer;
-        }
-        .btn-close {
-            background: transparent;
-            color: #94a3b8;
-            border: 1px solid #334155;
-            width: 100%;
-            padding: 8px;
-            border-radius: 6px;
-            font-size: 0.7rem;
-            cursor: pointer;
         }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>CYBER-DETECTIVE</h1>
-        <div class="header-controls">
-            <button class="profile-btn" onclick="openProfile()">PERFIL</button>
-            <button class="theme-btn" onclick="toggleTheme()">COR</button>
-            <div class="status-badge" id="net-status" onclick="openPaywall()">FREE</div>
+    <div id="splash-screen">
+        <div class="splash-header">
+            <h1>SHADOWS OF EVIDENCE</h1>
+            <p>criminal investigation RPG</p>
         </div>
-    </header>
-
-    <div class="stats-bar">
-        <div>CASO: <span id="case-name">O Arquiteto</span></div>
-        <div>PISTAS: <span id="clues-count">0</span>/3</div>
-        <div>NÍVEL: <span id="level-num">1</span></div>
-    </div>
-
-    <div id="terminal-box">
-        <div class="log-entry system-msg">[SYSTEM] Terminal v4.0 Ativado com Som/Glitch FX.</div>
-        <div class="log-entry prompt-msg">> Missão 1: Iniciar investigação forense nos servidores corporativos.</div>
-    </div>
-
-    <div class="actions-panel" id="control-panel">
-        <button class="action-btn" id="btn-logs" onclick="investigateLogs()">Analisar Logs</button>
-        <button class="action-btn" id="btn-decrypt" onclick="decryptFiles()" disabled>Descodificar Pista</button>
-        <button class="action-btn" id="btn-hack" onclick="hackNode()">Invadir Firewall</button>
-        <button class="action-btn" id="btn-next" onclick="nextCase()" disabled>Próximo Caso</button>
-    </div>
-
-    <!-- Modal Paywall (Mercado Pago R$ 10,00) -->
-    <div id="paywall-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>CYBER-DETECTIVE PRO</h2>
-            <p>Desbloqueie todos os casos avançados infinitos e recursos elite!</p>
-            <button class="btn-mp" onclick="openMercadoPagoCheckout()">Pagar com Mercado Pago (R$ 10)</button>
-            <p>Possui chave de ativação?</p>
-            <input type="text" id="license-code" placeholder="EX: CYBER2026">
-            <button class="btn-activate" onclick="activateLicense()">Ativar Licença</button>
-            <button class="btn-close" onclick="closePaywall()">Fechar</button>
+        
+        <div class="splash-center">
+            <p>> A carregar banco de dados forense...</p>
+            <p style="margin-top: 6px; color: #64748b; font-size: 0.65rem;">Sistemas encriptados ativos.</p>
         </div>
-    </div>
 
-    <!-- Modal Perfil do Detetive & Estatísticas -->
-    <div id="profile-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>PERFIL DO AGENTE</h2>
-            <div class="profile-stats" id="profile-stats-text">
-                Carregando dados...
+        <div class="splash-footer">
+            <div id="loading-container" class="progress-box">
+                <div class="progress-info">
+                    <span>SINCRONIZANDO CASOS</span>
+                    <span id="load-percent">0%</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div id="progress-fill" class="progress-bar-fill"></div>
+                </div>
             </div>
-            <button class="btn-close" onclick="closeProfile()">Voltar ao Jogo</button>
+            <button id="btn-tap" class="btn-start" onclick="startGame()">TAP TO CONTINUE</button>
+        </div>
+    </div>
+
+    <div id="game-content">
+        <header>
+            <h1>CYBER-DETECTIVE</h1>
+            <div style="font-size: 0.65rem; background: rgba(0,255,204,0.1); border: 1px solid currentColor; padding: 3px 6px; border-radius: 4px;">ACTIVE</div>
+        </header>
+
+        <div class="stats-bar">
+            <div>CASO: <span id="case-name">O Arquiteto</span></div>
+            <div>PISTAS: <span id="clues-count">0</span>/3</div>
+        </div>
+
+        <div id="terminal-box">
+            <div class="log-entry system-msg">[SYSTEM] Sessão iniciada com sucesso.</div>
+            <div class="log-entry prompt-msg">> Missão: Analisar dados do servidor alvo.</div>
+        </div>
+
+        <div class="actions-panel">
+            <button class="action-btn" onclick="investigate()">Analisar Logs</button>
+            <button class="action-btn" onclick="hackSystem()">Invadir Rede</button>
         </div>
     </div>
 
     <script>
-        let state = {
-            clues: 0,
-            level: 1,
-            casesCompleted: parseInt(localStorage.getItem('cyber_cases') || '0'),
-            isPro: localStorage.getItem('cyber_pro') === 'true',
-            themeIndex: 0,
-            logsChecked: false,
-            decrypted: false,
-            hacked: false
-        };
+        // Simulação da barra de carregamento ao abrir
+        let progress = 0;
+        const fill = document.getElementById('progress-fill');
+        const percent = document.getElementById('load-percent');
+        const loadingContainer = document.getElementById('loading-container');
+        const btnTap = document.getElementById('btn-tap');
 
-        const themes = ['#00ffcc', '#3b82f6', '#10b981', '#f59e0b', '#a855f7'];
-        const caseList = [
-            { name: "O Arquiteto", desc: "Inspecionar registos de acesso do servidor principal." },
-            { name: "Rede Fantasma", desc: "Rastrear tráfego encriptado da darkweb." },
-            { name: "Zero-Day Exploit", desc: "Desarmar bomba lógica no banco de dados central." },
-            { name: "Sintaxe Corrompida", desc: "Recuperar fragmentos de memória quântica da megacorporação." }
-        ];
-
-        if (state.isPro) applyProUI();
-
-        const terminal = document.getElementById('terminal-box');
-
-        // Efeito Sonoro Sintetizado via Web Audio API (Bips Digitais de Hacker)
-        function playBeep(frequency = 440, type = 'sine', duration = 0.08) {
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = type;
-                osc.frequency.value = frequency;
-                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + duration);
-            } catch (e) {}
-        }
-
-        // Efeito Glitch Visual no Terminal
-        triggerGlitch = function() {
-            terminal.classList.add('glitch-anim');
-            setTimeout(() => terminal.classList.remove('glitch-anim'), 200);
-        }
-
-        function addLog(text, className = 'prompt-msg') {
-            const div = document.createElement('div');
-            div.className = `log-entry ${className}`;
-            div.textContent = text;
-            terminal.appendChild(div);
-            terminal.scrollTop = terminal.scrollHeight;
-            playBeep(className === 'success-msg' ? 880 : className === 'warning-msg' ? 300 : 550);
-        }
-
-        function toggleTheme() {
-            state.themeIndex = (state.themeIndex + 1) % themes.length;
-            document.body.style.color = themes[state.themeIndex];
-            playBeep(700, 'triangle', 0.1);
-        }
-
-        function openPaywall() {
-            if (!state.isPro) {
-                document.getElementById('paywall-modal').style.display = 'flex';
-                playBeep(250, 'sawtooth', 0.15);
+        const loadInterval = setInterval(() => {
+            progress += Math.floor(Math.random() * 20) + 10;
+            if (progress >= 100) {
+                progress = 100;
+                clearInterval(loadInterval);
+                loadingContainer.style.display = 'none';
+                btnTap.style.display = 'block';
             }
-        }
+            fill.style.width = progress + '%';
+            percent.textContent = progress + '%';
+        }, 150);
 
-        function closePaywall() {
-            document.getElementById('paywall-modal').style.display = 'none';
-        }
-
-        function openProfile() {
-            const rank = state.isPro ? "ELITE CYBER-AGENT (PRO)" : "JUNIOR INVESTIGATOR (FREE)";
-            document.getElementById('profile-stats-text').innerHTML = `
-                <b>Status:</b> ${rank}<br>
-                <b>Nível Atual:</b> ${state.level}<br>
-                <b>Casos Concluídos:</b> ${state.casesCompleted}<br>
-                <b>Segurança:</b> Firewall Ativa
-            `;
-            document.getElementById('profile-modal').style.display = 'flex';
-            playBeep(650, 'sine', 0.1);
-        }
-
-        function closeProfile() {
-            document.getElementById('profile-modal').style.display = 'none';
-        }
-
-        function openMercadoPagoCheckout() {
-            const checkoutUrl = "https://mpago.la/1gsQRn3";
-            try {
-                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
-                    window.Capacitor.Plugins.Browser.open({ url: checkoutUrl });
-                } else {
-                    window.open(checkoutUrl, '_system');
-                }
-            } catch(e) {
-                window.location.href = checkoutUrl;
-            }
-        }
-
-        function activateLicense() {
-            const code = document.getElementById('license-code').value.trim();
-            if (code === 'CYBER2026' || code.startsWith('PRO-')) {
-                state.isPro = true;
-                localStorage.setItem('cyber_pro', 'true');
-                applyProUI();
-                closePaywall();
-                addLog("[SUCESSO] Licença PRO ativada permanentemente!", "success-msg");
-            } else {
-                alert("Código inválido. Insira uma chave de licença válida.");
-            }
-        }
-
-        function applyProUI() {
-            const badge = document.getElementById('net-status');
-            badge.textContent = 'PRO';
-            badge.className = 'status-badge pro';
-        }
-
-        function investigateLogs() {
-            triggerGlitch();
-            addLog("> A executar varredura profunda nos logs...", "system-msg");
+        function startGame() {
+            const splash = document.getElementById('splash-screen');
+            splash.style.opacity = '0';
             setTimeout(() => {
-                addLog("[ALERTA] Atividade suspeita detetada no cluster principal.", "warning-msg");
-                addLog("[PISTA ENCONTRADA] Hash: #CYBER_" + Math.floor(Math.random()*9000+1000), "clue-msg");
-                state.clues++;
-                state.logsChecked = true;
-                document.getElementById('clues-count').textContent = state.clues;
-                document.getElementById('btn-logs').disabled = true;
-                document.getElementById('btn-decrypt').disabled = false;
+                splash.style.display = 'none';
+                document.getElementById('game-content').style.display = 'flex';
             }, 500);
         }
 
-        function decryptFiles() {
-            triggerGlitch();
-            addLog("> A iniciar brute-force quântico...", "system-msg");
-            setTimeout(() => {
-                addLog("[SUCESSO] Dados restaurados com sucesso!", "success-msg");
-                addLog("[PISTA ENCONTRADA] Rota de origem mapeada.", "clue-msg");
-                state.clues++;
-                state.decrypted = true;
-                document.getElementById('clues-count').textContent = state.clues;
-                document.getElementById('btn-decrypt').disabled = true;
-            }, 600);
+        function investigate() {
+            const term = document.getElementById('terminal-box');
+            const div = document.createElement('div');
+            div.className = 'log-entry success-msg';
+            div.textContent = '[PISTA] Hash de acesso recuperado com sucesso.';
+            term.appendChild(div);
+            term.scrollTop = term.scrollHeight;
+            document.getElementById('clues-count').textContent = '1';
         }
 
-        function hackNode() {
-            triggerGlitch();
-            addLog("> A injetar payload de contorno de firewall...", "warning-msg");
-            setTimeout(() => {
-                addLog("[SUCESSO] Acesso root obtido com privilégios totais!", "success-msg");
-                addLog("[PISTA ENCONTRADA] Servidor alvo neutralizado.", "clue-msg");
-                state.clues++;
-                state.hacked = true;
-                document.getElementById('clues-count').textContent = state.clues;
-                document.getElementById('btn-hack').disabled = true;
-
-                if (state.clues >= 3) {
-                    document.getElementById('btn-next').disabled = false;
-                    state.casesCompleted++;
-                    localStorage.setItem('cyber_cases', state.casesCompleted);
-                    addLog("[MISSÃO CUMPRIDA] Todas as pistas reunidas!", "success-msg");
-                }
-            }, 700);
-        }
-
-        function nextCase() {
-            if (state.level >= 2 && !state.isPro) {
-                openPaywall();
-                return;
-            }
-            state.level++;
-            state.clues = 0;
-            state.logsChecked = false;
-            state.decrypted = false;
-            state.hacked = false;
-
-            const nextCaseObj = caseList[(state.level - 1) % caseList.length];
-            document.getElementById('level-num').textContent = state.level;
-            document.getElementById('clues-count').textContent = state.clues;
-            document.getElementById('case-name').textContent = nextCaseObj.name;
-
-            document.getElementById('btn-logs').disabled = false;
-            document.getElementById('btn-decrypt').disabled = true;
-            document.getElementById('btn-hack').disabled = false;
-            document.getElementById('btn-next').disabled = true;
-
-            addLog("--------------------------------------------------", "system-msg");
-            addLog(`[SYSTEM] Nível ${state.level}: "${nextCaseObj.name}". ${nextCaseObj.desc}`, "success-msg");
+        function hackSystem() {
+            const term = document.getElementById('terminal-box');
+            const div = document.createElement('div');
+            div.className = 'log-entry system-msg';
+            div.textContent = '[FIREWALL] Acesso root concedido!';
+            term.appendChild(div);
+            term.scrollTop = term.scrollHeight;
+            document.getElementById('clues-count').textContent = '2';
         }
     </script>
 </body>
