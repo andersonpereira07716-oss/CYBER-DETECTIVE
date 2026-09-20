@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cyber-Detective</string>
+    <string name="title_activity_main">Cyber-Detective</string>
+    <string name="package_name">com.cyberdetective.game</string>
+    <string name="custom_url_scheme">com.cyberdetective.game</string>
+</resources>

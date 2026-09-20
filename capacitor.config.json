@@ -1,0 +1,6 @@
+{
+  "appId": "com.cyberdetective.game",
+  "appName": "Cyber-Detective",
+  "webDir": "www",
+  "bundledWebRuntime": false
+}
