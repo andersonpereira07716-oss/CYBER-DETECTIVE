@@ -159,6 +159,22 @@
             term.scrollTop = term.scrollHeight;
             document.getElementById('clues-count').textContent = '1';
         }
+        function openProfile() {
+            alert('Perfil de Investigador: Nível 1 - Acesso Liberado.');
+        }
+
+        function toggleColor() {
+            alert('Modo de alta visibilidade ativado.');
+        }
+
+        // COLOQUE A NOVA FUNÇÃO AQUI EMBAIXO:
+        function openFreeMode() {
+            const term = document.getElementById('terminal-box');
+            term.innerHTML += '<div class="log-entry" style="color: #f59e0b;">> [MODO FREE] Recursos de investigação livre ativados.</div>';
+            term.scrollTop = term.scrollHeight;
+            alert('Modo Free: Acesso total concedido!');
+        }
+    </script>
 
         function hackSystem() {
             const term = document.getElementById('terminal-box');
