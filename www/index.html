@@ -112,12 +112,12 @@
             box-shadow: none;
             cursor: not-allowed;
         }
-        /* Modal Freemium */
+        /* Modal Freemium Otimizado */
         #paywall-modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5,7,12,0.92);
+            background: rgba(5,7,12,0.95);
             z-index: 100;
             justify-content: center;
             align-items: center;
@@ -127,7 +127,7 @@
             background: #0f172a;
             border: 2px solid #a855f7;
             border-radius: 8px;
-            padding: 20px;
+            padding: 18px;
             width: 100%;
             max-width: 320px;
             text-align: center;
@@ -135,13 +135,13 @@
         }
         .modal-content h2 {
             color: #d8b4fe;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
+            margin-bottom: 8px;
+            font-size: 1rem;
         }
         .modal-content p {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: #94a3b8;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             line-height: 1.4;
         }
         input {
@@ -151,30 +151,44 @@
             border: 1px solid #334155;
             color: #00ffcc;
             border-radius: 4px;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             text-align: center;
             font-family: monospace;
+            font-size: 0.8rem;
         }
         .btn-mp {
             background: #009ee3;
             color: #fff;
             border: none;
             width: 100%;
+            padding: 10px;
+            border-radius: 6px;
             margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            cursor: pointer;
         }
         .btn-activate {
             background: #7e22ce;
             color: #fff;
             border: 1px solid #a855f7;
             width: 100%;
+            padding: 10px;
+            border-radius: 6px;
             margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 0.75rem;
+            cursor: pointer;
         }
         .btn-close {
             background: transparent;
             color: #94a3b8;
             border: 1px solid #334155;
             width: 100%;
+            padding: 8px;
+            border-radius: 6px;
             font-size: 0.7rem;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -192,8 +206,8 @@
     </div>
 
     <div id="terminal-box">
-        <div class="log-entry system-msg">[SYSTEM] Terminal de Investigação v2.7 carregado.</div>
-        <div class="log-entry system-msg">[SYSTEM] Modo Free ativo. Atualize para PRO via Mercado Pago.</div>
+        <div class="log-entry system-msg">[SYSTEM] Terminal de Investigação v2.8 carregado.</div>
+        <div class="log-entry system-msg">[SYSTEM] Modo Free ativo. Faça upgrade para PRO.</div>
         <div class="log-entry prompt-msg">> Missão Ativa: Analise os registos de acesso do servidor.</div>
     </div>
 
@@ -204,13 +218,13 @@
         <button id="btn-next" onclick="nextCase()" disabled>Próximo Caso</button>
     </div>
 
-    <!-- Modal Paywall com Mercado Pago -->
+    <!-- Modal Paywall Otimizado para WebView -->
     <div id="paywall-modal">
         <div class="modal-content">
             <h2>CYBER-DETECTIVE PRO</h2>
-            <p>1. Toque abaixo para abrir o checkout seguro do Mercado Pago:</p>
-            <button class="btn-mp" onclick="openMercadoPago()">Pagar com Mercado Pago</button>
-            <p style="margin-top: 10px;">2. Insira o código de ativação após o pagamento:</p>
+            <p>1. Copie o link abaixo ou clique para pagar no Mercado Pago:</p>
+            <button class="btn-mp" onclick="openMercadoPago()">Abrir Checkout Mercado Pago</button>
+            <p>2. Insira o código de ativação após o pagamento:</p>
             <input type="text" id="license-code" placeholder="EX: CYBER2026">
             <button class="btn-activate" onclick="activateLicense()">Ativar Licença PRO</button>
             <button class="btn-close" onclick="closePaywall()">Fechar</button>
@@ -252,19 +266,16 @@
         }
 
         function openMercadoPago() {
-            // Utiliza location.href para redirecionar corretamente no WebView do Android
-            const paymentUrl = 'https://mpago.la/seu-link-de-pagamento';
-            
+            const url = 'https://mpago.la/seu-link-de-pagamento';
+            // Tenta usar a API do Capacitor se disponível, caso contrário usa location
             try {
-                // Tenta abrir numa nova janela/tag do browser nativo se suportado
-                const a = document.createElement('a');
-                a.href = paymentUrl;
-                a.target = '_blank';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            } catch(e) {
-                window.location.href = paymentUrl;
+                if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Browser) {
+                    window.Capacitor.Plugins.Browser.open({ url: url });
+                } else {
+                    window.open(url, '_system');
+                }
+            } catch (e) {
+                window.location.href = url;
             }
         }
 
