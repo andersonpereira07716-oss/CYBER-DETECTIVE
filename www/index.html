@@ -75,6 +75,22 @@
             display: none; margin-top: 8px; background: #1c1408; border: 1px solid #f59e0b; border-radius: 6px;
             padding: 10px; font-size: 0.65rem; color: #fbbf24; text-align: center;
         }
+        #pro-banner.waiting { border-color: #3b82f6; color: #93c5fd; background: #0b1220; }
+
+        #activate-row { display: flex; gap: 6px; margin-top: 8px; }
+        #activate-input {
+            flex: 1; background: #030508; border: 1px solid #1a365d; color: #00ffcc; padding: 8px;
+            border-radius: 6px; font-size: 0.7rem; font-family: inherit; text-transform: uppercase;
+        }
+        #activate-btn {
+            background: #0b0f19; color: #00ffcc; border: 1px solid #00ffcc; padding: 8px 10px;
+            border-radius: 6px; font-size: 0.65rem; font-weight: bold; cursor: pointer;
+        }
+
+        #pro-code-display {
+            display: none; margin-top: 8px; font-size: 0.7rem; color: #10b981; text-align: center;
+            border: 1px dashed #10b981; border-radius: 6px; padding: 8px; letter-spacing: 1px;
+        }
     </style>
 </head>
 <body>
@@ -132,33 +148,36 @@
             <button id="btn-next" class="action-btn locked" onclick="nextCase()">Próximo Caso</button>
         </div>
 
+        <div id="pro-code-display"></div>
+
         <div id="pro-banner">
             > Recursos PRO bloqueados: Descodificar Pista e Próximo Caso.<br>
-            > Toque em PRO no topo para desbloquear.
+            > Toque em PRO no topo para comprar, ou ative um código já comprado:
+            <div id="activate-row">
+                <input id="activate-input" type="text" placeholder="CYBER-XXXX-XXXX" maxlength="16">
+                <button id="activate-btn" onclick="activateManualCode()">ATIVAR</button>
+            </div>
         </div>
     </div>
 
     <script>
-        // ⚠️ Ajuste para o domínio real do seu app publicado na Vercel
-        const API_BASE_URL = 'https://cyber-detective-rouge.vercel.app';
-        const DEVICE_ID_KEY = 'cd_device_id';
+        const DEVICE_STORAGE = {
+            pro: 'cd_pro_activated',       // "true" quando um código válido já foi ativado
+            code: 'cd_pro_code',           // guarda o código pra exibir/backup
+            pendingRef: 'cd_pending_ref'   // external_reference de um pagamento em aberto
+        };
 
-        let proStatus = false; // vem sempre do servidor, nunca decidido só no cliente
-
-        function getDeviceId() {
-            let id = localStorage.getItem(DEVICE_ID_KEY);
-            if (!id) {
-                id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random());
-                localStorage.setItem(DEVICE_ID_KEY, id);
-            }
-            return id;
-        }
+        let proStatus = localStorage.getItem(DEVICE_STORAGE.pro) === 'true';
+        let pollTimer = null;
+        let pollAttempts = 0;
+        const MAX_POLL_ATTEMPTS = 20; // ~ até 1 minuto (checagens a cada 3s)
 
         function refreshProUI() {
             const proBtn = document.getElementById('pro-nav-btn');
             const banner = document.getElementById('pro-banner');
             const btnDecode = document.getElementById('btn-decode');
             const btnNext = document.getElementById('btn-next');
+            const codeDisplay = document.getElementById('pro-code-display');
 
             if (proStatus) {
                 proBtn.textContent = 'PRO ✓';
@@ -166,27 +185,118 @@
                 banner.style.display = 'none';
                 btnDecode.classList.remove('locked');
                 btnNext.classList.remove('locked');
+
+                const savedCode = localStorage.getItem(DEVICE_STORAGE.code);
+                if (savedCode) {
+                    codeDisplay.style.display = 'block';
+                    codeDisplay.textContent = `Seu código PRO: ${savedCode} (guarde-o para reativar em outro aparelho)`;
+                }
             } else {
                 proBtn.textContent = 'PRO';
                 proBtn.classList.remove('unlocked');
                 banner.style.display = 'block';
+                banner.classList.remove('waiting');
                 btnDecode.classList.add('locked');
                 btnNext.classList.add('locked');
+                codeDisplay.style.display = 'none';
             }
         }
 
-        // Confirma com o SERVIDOR (que por sua vez confirmou com o Mercado Pago) se é PRO
-        async function checkProStatus() {
+        function setBannerWaiting(message) {
+            const banner = document.getElementById('pro-banner');
+            banner.classList.add('waiting');
+            banner.innerHTML = `> ${message}`;
+        }
+
+        function resetBannerToDefault() {
+            const banner = document.getElementById('pro-banner');
+            banner.classList.remove('waiting');
+            banner.innerHTML = `
+                > Recursos PRO bloqueados: Descodificar Pista e Próximo Caso.<br>
+                > Toque em PRO no topo para comprar, ou ative um código já comprado:
+                <div id="activate-row">
+                    <input id="activate-input" type="text" placeholder="CYBER-XXXX-XXXX" maxlength="16">
+                    <button id="activate-btn" onclick="activateManualCode()">ATIVAR</button>
+                </div>
+            `;
+        }
+
+        // Ativa um código junto ao servidor. Se válido, libera o PRO neste aparelho.
+        async function activateCode(code) {
             try {
-                const deviceId = getDeviceId();
-                const res = await fetch(`${API_BASE_URL}/api/check-status?deviceId=${encodeURIComponent(deviceId)}`);
+                const res = await fetch('/api/activate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
                 const data = await res.json();
-                proStatus = !!data.isPro;
+
+                if (data.valid) {
+                    proStatus = true;
+                    localStorage.setItem(DEVICE_STORAGE.pro, 'true');
+                    localStorage.setItem(DEVICE_STORAGE.code, code);
+                    localStorage.removeItem(DEVICE_STORAGE.pendingRef);
+                    stopPolling();
+                    refreshProUI();
+
+                    const term = document.getElementById('terminal-box');
+                    term.innerHTML += `<div class="log-entry success-msg">> [PRO] Código ativado com sucesso. Bem-vindo, investigador.</div>`;
+                    term.scrollTop = term.scrollHeight;
+                    return true;
+                } else {
+                    return false;
+                }
             } catch (err) {
-                console.error('Falha ao verificar status PRO:', err);
-                // mantém proStatus como estava (não libera nada por erro de rede)
+                console.error('Erro ao ativar código:', err);
+                return false;
             }
-            refreshProUI();
+        }
+
+        async function activateManualCode() {
+            const input = document.getElementById('activate-input');
+            const code = (input.value || '').trim().toUpperCase();
+            if (!code) return;
+
+            const ok = await activateCode(code);
+            if (!ok) {
+                alert('Código inválido ou já utilizado.');
+            }
+        }
+
+        // Depois que o usuário volta do checkout, ficamos checando se o pagamento
+        // já foi aprovado e um código já foi gerado pelo webhook.
+        function startPolling(externalReference) {
+            stopPolling();
+            pollAttempts = 0;
+            setBannerWaiting('Aguardando confirmação do pagamento...');
+
+            pollTimer = setInterval(async () => {
+                pollAttempts++;
+                try {
+                    const res = await fetch(`/api/check-payment?ref=${encodeURIComponent(externalReference)}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.status === 'approved' && data.code) {
+                            const ok = await activateCode(data.code);
+                            if (ok) return; // já parou o polling dentro de activateCode
+                        }
+                    }
+                } catch (err) {
+                    console.error('Erro ao checar pagamento:', err);
+                }
+
+                if (pollAttempts >= MAX_POLL_ATTEMPTS) {
+                    stopPolling();
+                    setBannerWaiting('Ainda não identificamos seu pagamento. Se você já pagou, aguarde alguns instantes e reabra o app, ou digite o código manualmente abaixo assim que recebê-lo.');
+                }
+            }, 3000);
+        }
+
+        function stopPolling() {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
         }
 
         // Lógica de Carregamento da Splash Screen
@@ -215,16 +325,14 @@
                 splash.style.display = 'none';
                 document.getElementById('game-content').style.display = 'flex';
                 refreshProUI();
-                checkProStatus();
+
+                // Se havia um pagamento em aberto (usuário voltou do checkout), retoma a checagem
+                const pendingRef = localStorage.getItem(DEVICE_STORAGE.pendingRef);
+                if (!proStatus && pendingRef) {
+                    startPolling(pendingRef);
+                }
             }, 600);
         }
-
-        // Se o usuário voltar do checkout do Mercado Pago para esta aba, reconsulta o status
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible') {
-                checkProStatus();
-            }
-        });
 
         // Funções interativas do Terminal
         function investigate() {
@@ -271,7 +379,7 @@
             alert('Modo de alta visibilidade ativado.');
         }
 
-        // Cria um checkout dinâmico vinculado a este aparelho e redireciona
+        // Cria a cobrança no Mercado Pago e redireciona para o checkout
         async function openProCheckout() {
             if (proStatus) {
                 alert('Você já tem acesso PRO liberado neste dispositivo!');
@@ -283,19 +391,15 @@
             proBtn.textContent = '...';
 
             try {
-                const deviceId = getDeviceId();
-                const res = await fetch(`${API_BASE_URL}/api/create-preference`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ deviceId })
-                });
+                const res = await fetch('/api/create-preference', { method: 'POST' });
                 const data = await res.json();
 
-                if (!res.ok || !data.checkoutUrl) {
+                if (!res.ok || !data.checkout_url) {
                     throw new Error(data.error || 'Erro ao gerar checkout');
                 }
 
-                window.location.href = data.checkoutUrl;
+                localStorage.setItem(DEVICE_STORAGE.pendingRef, data.external_reference);
+                window.location.href = data.checkout_url;
             } catch (err) {
                 console.error(err);
                 alert('Não foi possível abrir o checkout agora. Tente novamente em instantes.');
