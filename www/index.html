@@ -18,100 +18,132 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
-            padding: 15px;
+            padding: 12px;
         }
         header {
             border-bottom: 2px solid #00ffcc;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
+            padding-bottom: 8px;
+            margin-bottom: 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         h1 {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             letter-spacing: 2px;
             text-shadow: 0 0 8px rgba(0,255,204,0.6);
         }
         .status-badge {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             background: rgba(0,255,204,0.1);
             border: 1px solid #00ffcc;
-            padding: 3px 8px;
+            padding: 3px 6px;
             border-radius: 4px;
+        }
+        .stats-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            margin-bottom: 8px;
+            color: #94a3b8;
+            background: #0f172a;
+            padding: 6px 10px;
+            border-radius: 4px;
+            border: 1px solid #1e293b;
+        }
+        .stats-bar span {
+            color: #00ffcc;
         }
         #terminal-box {
             flex: 1;
             background: #05070c;
             border: 1px solid #1a365d;
             border-radius: 6px;
-            padding: 12px;
+            padding: 10px;
             overflow-y: auto;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 8px;
             box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
         }
         .log-entry {
             line-height: 1.4;
         }
-        .system-msg {
-            color: #3b82f6;
-        }
-        .warning-msg {
-            color: #f59e0b;
-        }
-        .success-msg {
-            color: #10b981;
-        }
-        .prompt-msg {
-            color: #00ffcc;
-        }
+        .system-msg { color: #3b82f6; }
+        .warning-msg { color: #f59e0b; }
+        .success-msg { color: #10b981; }
+        .error-msg { color: #ef4444; }
+        .prompt-msg { color: #00ffcc; }
+        .clue-msg { color: #a855f7; font-weight: bold; }
+        
         .actions-panel {
-            margin-top: 15px;
+            margin-top: 10px;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 8px;
         }
         button {
             background: #111827;
             color: #00ffcc;
             border: 1px solid #00ffcc;
-            padding: 12px;
+            padding: 10px;
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
             text-transform: uppercase;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             transition: all 0.2s;
         }
-        button:active {
+        button:active, button:hover {
             background: #00ffcc;
             color: #0b0f19;
-            box-shadow: 0 0 12px #00ffcc;
+            box-shadow: 0 0 10px #00ffcc;
+        }
+        button:disabled {
+            border-color: #334155;
+            color: #475569;
+            background: #090d16;
+            box-shadow: none;
+            cursor: not-allowed;
         }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>CYBER-DETECTIVE v1.0</h1>
+        <h1>CYBER-DETECTIVE</h1>
         <div class="status-badge" id="net-status">SECURE_LINK</div>
     </header>
 
-    <div id="terminal-box">
-        <div class="log-entry system-msg">[SYSTEM] Inicializando kernel de investigação...</div>
-        <div class="log-entry system-msg">[SYSTEM] Conexão estabelecida com o mainframe central.</div>
-        <div class="log-entry prompt-msg">> Caso Ativo: O Desaparecimento do Arquiteto. Toque em "Analisar Logs" para iniciar.</div>
+    <div class="stats-bar">
+        <div>CASO: <span id="case-name">O Arquiteto</span></div>
+        <div>PISTAS: <span id="clues-count">0</span>/3</div>
+        <div>NÍVEL: <span id="level-num">1</span></div>
     </div>
 
-    <div class="actions-panel">
-        <button onclick="investigateLogs()">Analisar Logs</button>
-        <button onclick="hackTerminal()">Invadir Nó</button>
+    <div id="terminal-box">
+        <div class="log-entry system-msg">[SYSTEM] Terminal de Investigação Cibernética v2.4 carregado.</div>
+        <div class="log-entry system-msg">[SYSTEM] Alvo: Rastreio de servidores corporativos comprometidos.</div>
+        <div class="log-entry prompt-msg">> Missão Ativa: Inicie a investigação analisando os registos de acesso.</div>
+    </div>
+
+    <div class="actions-panel" id="control-panel">
+        <button id="btn-logs" onclick="investigateLogs()">Analisar Logs</button>
+        <button id="btn-decrypt" onclick="decryptFiles()" disabled>Descodificar Pista</button>
+        <button id="btn-hack" onclick="hackNode()">Invadir Firewall</button>
+        <button id="btn-next" onclick="nextCase()" disabled>Próximo Caso</button>
     </div>
 
     <script>
+        let state = {
+            clues: 0,
+            level: 1,
+            logsChecked: false,
+            decrypted: false,
+            hacked: false
+        };
+
         const terminal = document.getElementById('terminal-box');
 
         function addLog(text, className = 'prompt-msg') {
@@ -123,21 +155,72 @@
         }
 
         function investigateLogs() {
-            addLog("> A aceder aos registos de acesso do terminal...", "system-msg");
+            addLog("> A executar varredura profunda nos logs do servidor...", "system-msg");
             setTimeout(() => {
-                addLog("[ALERTA] Encontrado IP desconhecido a aceder à firewall às 03:42 AM.", "warning-msg");
-                addLog("[PISTA] O alvo deixou um rasto criptografado na porta 8080.", "success-msg");
+                addLog("[ALERTA] IP 192.168.4.88 detetado a descarregar ficheiros confidenciais às 03:42 AM.", "warning-msg");
+                addLog("[PISTA ENCONTRADA] Chave de hash parcial detetada: #CYBER_992X", "clue-msg");
+                state.clues++;
+                state.logsChecked = true;
+                document.getElementById('clues-count').textContent = state.clues;
+                document.getElementById('btn-logs').disabled = true;
+                document.getElementById('btn-decrypt').disabled = false;
             }, 600);
         }
 
-        function hackTerminal() {
-            addLog("> A iniciar protocolo de força bruta...", "warning-msg");
+        function decryptFiles() {
+            addLog("> A iniciar algoritmo de brute-force na chave #CYBER_992X...", "system-msg");
             setTimeout(() => {
-                addLog("[SUCESSO] Firewall bypassada! Acesso root concedido.", "success-msg");
+                addLog("[SUCESSO] Ficheiro corrompido restaurado com sucesso!", "success-msg");
+                addLog("[PISTA ENCONTRADA] Localização do suspeito revelada: Setor 7 - Antiga Estação.", "clue-msg");
+                state.clues++;
+                state.decrypted = true;
+                document.getElementById('clues-count').textContent = state.clues;
+                document.getElementById('btn-decrypt').disabled = true;
+            }, 700);
+        }
+
+        function hackNode() {
+            addLog("> A enviar payload de injeção de código para a Firewall corporativa...", "warning-msg");
+            setTimeout(() => {
+                addLog("[SUCESSO] Acesso root obtido com privilégios máximos!", "success-msg");
+                addLog("[PISTA ENCONTRADA] O Arquiteto deixou uma mensagem gravada no mainframe.", "clue-msg");
+                state.clues++;
+                state.hacked = true;
+                document.getElementById('clues-count').textContent = state.clues;
+                document.getElementById('btn-hack').disabled = true;
                 document.getElementById('net-status').style.borderColor = '#10b981';
                 document.getElementById('net-status').style.color = '#10b981';
                 document.getElementById('net-status').textContent = 'ROOT_ACCESS';
+
+                if (state.clues >= 3) {
+                    document.getElementById('btn-next').disabled = false;
+                    addLog("[MISSÃO CUMPRIDA] Todas as pistas principais reunidas! Pode avançar para o próximo caso.", "success-msg");
+                }
             }, 800);
+        }
+
+        function nextCase() {
+            state.level++;
+            state.clues = 0;
+            state.logsChecked = false;
+            state.decrypted = false;
+            state.hacked = false;
+
+            document.getElementById('level-num').textContent = state.level;
+            document.getElementById('clues-count').textContent = state.clues;
+            document.getElementById('case-name').textContent = "Rede Fantasma";
+            document.getElementById('net-status').style.borderColor = '#00ffcc';
+            document.getElementById('net-status').style.color = '#00ffcc';
+            document.getElementById('net-status').textContent = 'SECURE_LINK';
+
+            document.getElementById('btn-logs').disabled = false;
+            document.getElementById('btn-decrypt').disabled = true;
+            document.getElementById('btn-hack').disabled = false;
+            document.getElementById('btn-next').disabled = true;
+
+            addLog("--------------------------------------------------", "system-msg");
+            addLog(`[SYSTEM] Nível ${state.level} iniciado: O caso da "Rede Fantasma".`, "system-msg");
+            addLog("> Objetivo: Rastrear sinais de rádio encriptados na dark web.", "prompt-msg");
         }
     </script>
 </body>
