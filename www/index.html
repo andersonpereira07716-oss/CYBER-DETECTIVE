@@ -112,7 +112,7 @@
             box-shadow: none;
             cursor: not-allowed;
         }
-        /* Modal Freemium */
+        /* Modal Freemium Real */
         #paywall-modal {
             display: none;
             position: fixed;
@@ -136,15 +136,33 @@
         .modal-content h2 {
             color: #d8b4fe;
             margin-bottom: 10px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
         .modal-content p {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             color: #94a3b8;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             line-height: 1.4;
         }
-        .btn-pro {
+        input {
+            width: 100%;
+            padding: 8px;
+            background: #05070c;
+            border: 1px solid #334155;
+            color: #00ffcc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            text-align: center;
+            font-family: monospace;
+        }
+        .btn-mp {
+            background: #009ee3;
+            color: #fff;
+            border: none;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        .btn-activate {
             background: #7e22ce;
             color: #fff;
             border: 1px solid #a855f7;
@@ -156,6 +174,7 @@
             color: #94a3b8;
             border: 1px solid #334155;
             width: 100%;
+            font-size: 0.7rem;
         }
     </style>
 </head>
@@ -173,8 +192,8 @@
     </div>
 
     <div id="terminal-box">
-        <div class="log-entry system-msg">[SYSTEM] Terminal de Investigação Cibernética v2.5 carregado.</div>
-        <div class="log-entry system-msg">[SYSTEM] Modo Free ativo. Atualize para PRO para desbloquear todos os casos.</div>
+        <div class="log-entry system-msg">[SYSTEM] Terminal de Investigação Cibernética v2.6 carregado.</div>
+        <div class="log-entry system-msg">[SYSTEM] Modo Free ativo. Atualize para PRO via Mercado Pago para desbloquear tudo.</div>
         <div class="log-entry prompt-msg">> Missão Ativa: Analise os registos de acesso do servidor.</div>
     </div>
 
@@ -185,13 +204,16 @@
         <button id="btn-next" onclick="nextCase()" disabled>Próximo Caso</button>
     </div>
 
-    <!-- Modal Paywall Freemium -->
+    <!-- Modal Paywall com Mercado Pago -->
     <div id="paywall-modal">
         <div class="modal-content">
             <h2>CYBER-DETECTIVE PRO</h2>
-            <p>Desbloqueie acesso ilimitado a todos os níveis, casos confidenciais na Dark Web e ferramentas de hacking avançadas por apenas R$ 9,90/mês.</p>
-            <button class="btn-pro" onclick="simulateCheckout()">Assinar com Mercado Pago</button>
-            <button class="btn-close" onclick="closePaywall()">Continuar Grátis</button>
+            <p>1. Pague com Mercado Pago para receber a sua licença de acesso ilimitado.</p>
+            <button class="btn-mp" onclick="openMercadoPago()">Pagar com Mercado Pago</button>
+            <p style="margin-top: 10px;">2. Insira o código de ativação recebido após o pagamento:</p>
+            <input type="text" id="license-code" placeholder="EX: PRO-992X-2026">
+            <button class="btn-activate" onclick="activateLicense()">Ativar Licença PRO</button>
+            <button class="btn-close" onclick="closePaywall()">Fechar</button>
         </div>
     </div>
 
@@ -199,11 +221,16 @@
         let state = {
             clues: 0,
             level: 1,
-            isPro: false,
+            isPro: localStorage.getItem('cyber_pro') === 'true',
             logsChecked: false,
             decrypted: false,
             hacked: false
         };
+
+        // Restaurar estado PRO se já estiver salvo no telemóvel
+        if (state.isPro) {
+            applyProUI();
+        }
 
         const terminal = document.getElementById('terminal-box');
 
@@ -225,14 +252,29 @@
             document.getElementById('paywall-modal').style.display = 'none';
         }
 
-        function simulateCheckout() {
-            // Simulação de pagamento aprovado (integrável com webhook de Mercado Pago/Cakto)
-            state.isPro = true;
-            closePaywall();
+        function openMercadoPago() {
+            // Substitua pelo seu link real de pagamento do Mercado Pago
+            window.open('https://mpago.la/seu-link-de-pagamento', '_blank');
+        }
+
+        function activateLicense() {
+            const code = document.getElementById('license-code').value.trim();
+            // Código de ativação exemplo (pode definir o seu próprio código secreto)
+            if (code === 'CYBER2026' || code.startsWith('PRO-')) {
+                state.isPro = true;
+                localStorage.setItem('cyber_pro', 'true');
+                applyProUI();
+                closePaywall();
+                addLog("[SUCESSO] Licença PRO ativada permanentemente neste dispositivo!", "success-msg");
+            } else {
+                alert("Código inválido. Conclua o pagamento no Mercado Pago para obter o código.");
+            }
+        }
+
+        function applyProUI() {
             const badge = document.getElementById('net-status');
             badge.textContent = 'PRO_AGENT';
             badge.className = 'status-badge pro';
-            addLog("[SUCESSO] Pagamento verificado! Conta atualizada para nível PRO.", "success-msg");
         }
 
         function investigateLogs() {
