@@ -39,6 +39,12 @@
             border: 1px solid #00ffcc;
             padding: 3px 6px;
             border-radius: 4px;
+            cursor: pointer;
+        }
+        .status-badge.pro {
+            background: rgba(168,85,247,0.2);
+            border-color: #a855f7;
+            color: #d8b4fe;
         }
         .stats-bar {
             display: flex;
@@ -73,7 +79,6 @@
         .system-msg { color: #3b82f6; }
         .warning-msg { color: #f59e0b; }
         .success-msg { color: #10b981; }
-        .error-msg { color: #ef4444; }
         .prompt-msg { color: #00ffcc; }
         .clue-msg { color: #a855f7; font-weight: bold; }
         
@@ -107,13 +112,58 @@
             box-shadow: none;
             cursor: not-allowed;
         }
+        /* Modal Freemium */
+        #paywall-modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5,7,12,0.92);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .modal-content {
+            background: #0f172a;
+            border: 2px solid #a855f7;
+            border-radius: 8px;
+            padding: 20px;
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(168,85,247,0.4);
+        }
+        .modal-content h2 {
+            color: #d8b4fe;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        .modal-content p {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        .btn-pro {
+            background: #7e22ce;
+            color: #fff;
+            border: 1px solid #a855f7;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        .btn-close {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            width: 100%;
+        }
     </style>
 </head>
 <body>
 
     <header>
         <h1>CYBER-DETECTIVE</h1>
-        <div class="status-badge" id="net-status">SECURE_LINK</div>
+        <div class="status-badge" id="net-status" onclick="openPaywall()">FREE_TIER</div>
     </header>
 
     <div class="stats-bar">
@@ -123,9 +173,9 @@
     </div>
 
     <div id="terminal-box">
-        <div class="log-entry system-msg">[SYSTEM] Terminal de Investigação Cibernética v2.4 carregado.</div>
-        <div class="log-entry system-msg">[SYSTEM] Alvo: Rastreio de servidores corporativos comprometidos.</div>
-        <div class="log-entry prompt-msg">> Missão Ativa: Inicie a investigação analisando os registos de acesso.</div>
+        <div class="log-entry system-msg">[SYSTEM] Terminal de Investigação Cibernética v2.5 carregado.</div>
+        <div class="log-entry system-msg">[SYSTEM] Modo Free ativo. Atualize para PRO para desbloquear todos os casos.</div>
+        <div class="log-entry prompt-msg">> Missão Ativa: Analise os registos de acesso do servidor.</div>
     </div>
 
     <div class="actions-panel" id="control-panel">
@@ -135,10 +185,21 @@
         <button id="btn-next" onclick="nextCase()" disabled>Próximo Caso</button>
     </div>
 
+    <!-- Modal Paywall Freemium -->
+    <div id="paywall-modal">
+        <div class="modal-content">
+            <h2>CYBER-DETECTIVE PRO</h2>
+            <p>Desbloqueie acesso ilimitado a todos os níveis, casos confidenciais na Dark Web e ferramentas de hacking avançadas por apenas R$ 9,90/mês.</p>
+            <button class="btn-pro" onclick="simulateCheckout()">Assinar com Mercado Pago</button>
+            <button class="btn-close" onclick="closePaywall()">Continuar Grátis</button>
+        </div>
+    </div>
+
     <script>
         let state = {
             clues: 0,
             level: 1,
+            isPro: false,
             logsChecked: false,
             decrypted: false,
             hacked: false
@@ -154,11 +215,31 @@
             terminal.scrollTop = terminal.scrollHeight;
         }
 
+        function openPaywall() {
+            if (!state.isPro) {
+                document.getElementById('paywall-modal').style.display = 'flex';
+            }
+        }
+
+        function closePaywall() {
+            document.getElementById('paywall-modal').style.display = 'none';
+        }
+
+        function simulateCheckout() {
+            // Simulação de pagamento aprovado (integrável com webhook de Mercado Pago/Cakto)
+            state.isPro = true;
+            closePaywall();
+            const badge = document.getElementById('net-status');
+            badge.textContent = 'PRO_AGENT';
+            badge.className = 'status-badge pro';
+            addLog("[SUCESSO] Pagamento verificado! Conta atualizada para nível PRO.", "success-msg");
+        }
+
         function investigateLogs() {
             addLog("> A executar varredura profunda nos logs do servidor...", "system-msg");
             setTimeout(() => {
-                addLog("[ALERTA] IP 192.168.4.88 detetado a descarregar ficheiros confidenciais às 03:42 AM.", "warning-msg");
-                addLog("[PISTA ENCONTRADA] Chave de hash parcial detetada: #CYBER_992X", "clue-msg");
+                addLog("[ALERTA] IP 192.168.4.88 detetado a descarregar ficheiros confidenciais.", "warning-msg");
+                addLog("[PISTA ENCONTRADA] Chave hash: #CYBER_992X", "clue-msg");
                 state.clues++;
                 state.logsChecked = true;
                 document.getElementById('clues-count').textContent = state.clues;
@@ -168,10 +249,10 @@
         }
 
         function decryptFiles() {
-            addLog("> A iniciar algoritmo de brute-force na chave #CYBER_992X...", "system-msg");
+            addLog("> A iniciar brute-force na chave #CYBER_992X...", "system-msg");
             setTimeout(() => {
-                addLog("[SUCESSO] Ficheiro corrompido restaurado com sucesso!", "success-msg");
-                addLog("[PISTA ENCONTRADA] Localização do suspeito revelada: Setor 7 - Antiga Estação.", "clue-msg");
+                addLog("[SUCESSO] Ficheiro restaurado com sucesso!", "success-msg");
+                addLog("[PISTA ENCONTRADA] Localização: Setor 7 - Antiga Estação.", "clue-msg");
                 state.clues++;
                 state.decrypted = true;
                 document.getElementById('clues-count').textContent = state.clues;
@@ -180,26 +261,27 @@
         }
 
         function hackNode() {
-            addLog("> A enviar payload de injeção de código para a Firewall corporativa...", "warning-msg");
+            addLog("> A injetar payload na Firewall corporativa...", "warning-msg");
             setTimeout(() => {
-                addLog("[SUCESSO] Acesso root obtido com privilégios máximos!", "success-msg");
-                addLog("[PISTA ENCONTRADA] O Arquiteto deixou uma mensagem gravada no mainframe.", "clue-msg");
+                addLog("[SUCESSO] Acesso root obtido!", "success-msg");
+                addLog("[PISTA ENCONTRADA] Mensagem gravada no mainframe.", "clue-msg");
                 state.clues++;
                 state.hacked = true;
                 document.getElementById('clues-count').textContent = state.clues;
                 document.getElementById('btn-hack').disabled = true;
-                document.getElementById('net-status').style.borderColor = '#10b981';
-                document.getElementById('net-status').style.color = '#10b981';
-                document.getElementById('net-status').textContent = 'ROOT_ACCESS';
 
                 if (state.clues >= 3) {
                     document.getElementById('btn-next').disabled = false;
-                    addLog("[MISSÃO CUMPRIDA] Todas as pistas principais reunidas! Pode avançar para o próximo caso.", "success-msg");
+                    addLog("[MISSÃO CUMPRIDA] Pistas reunidas! Pode avançar de caso.", "success-msg");
                 }
             }, 800);
         }
 
         function nextCase() {
+            if (state.level >= 1 && !state.isPro) {
+                openPaywall();
+                return;
+            }
             state.level++;
             state.clues = 0;
             state.logsChecked = false;
@@ -208,10 +290,7 @@
 
             document.getElementById('level-num').textContent = state.level;
             document.getElementById('clues-count').textContent = state.clues;
-            document.getElementById('case-name').textContent = "Rede Fantasma";
-            document.getElementById('net-status').style.borderColor = '#00ffcc';
-            document.getElementById('net-status').style.color = '#00ffcc';
-            document.getElementById('net-status').textContent = 'SECURE_LINK';
+            document.getElementById('case-name').textContent = "Rede Fantasma (PRO)";
 
             document.getElementById('btn-logs').disabled = false;
             document.getElementById('btn-decrypt').disabled = true;
@@ -219,8 +298,7 @@
             document.getElementById('btn-next').disabled = true;
 
             addLog("--------------------------------------------------", "system-msg");
-            addLog(`[SYSTEM] Nível ${state.level} iniciado: O caso da "Rede Fantasma".`, "system-msg");
-            addLog("> Objetivo: Rastrear sinais de rádio encriptados na dark web.", "prompt-msg");
+            addLog(`[SYSTEM] Nível ${state.level} desbloqueado: "Rede Fantasma".`, "success-msg");
         }
     </script>
 </body>
